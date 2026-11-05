@@ -3,6 +3,7 @@ name: Build and publish AutoPSB APK
 on:
   push:
     branches: [main]
+  create:
   workflow_dispatch:
 
 permissions:
@@ -10,6 +11,7 @@ permissions:
 
 jobs:
   build:
+    if: github.ref_type == 'branch' && github.ref_name == 'apk-build-trigger' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
