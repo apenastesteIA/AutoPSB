@@ -11,14 +11,14 @@ permissions:
 
 jobs:
   build:
-    if: github.ref_type == 'branch' && github.ref_name == 'apk-build-trigger' || github.ref == 'refs/heads/main'
+    if: (github.ref_type == 'branch' && github.ref_name == 'apk-build-trigger') || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -26,7 +26,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: 'platforms;android-36-ext1 build-tools;36.0.0'
+          packages: 'platforms;android-36.1 build-tools;36.0.0'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
