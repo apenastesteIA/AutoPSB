@@ -1,0 +1,52 @@
+name: Build and publish AutoPSB APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platforms;android-36-ext1 build-tools;36.0.0'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '9.3.1'
+
+      - name: Prepare project
+        run: |
+          mkdir -p "$RUNNER_TEMP/autopsb"
+          unzip -q AutoPSB.zip -d "$RUNNER_TEMP/autopsb"
+          sed -i '/signingConfig = signingConfigs.getByName("debugConfig")/d' "$RUNNER_TEMP/autopsb/app/build.gradle.kts"
+
+      - name: Build installable debug APK
+        run: gradle --no-daemon --stacktrace -p "$RUNNER_TEMP/autopsb" :app:assembleDebug
+
+      - name: Publish APK as a GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="autopsb-debug-${GITHUB_RUN_NUMBER}"
+          gh release create "$tag" "$RUNNER_TEMP/autopsb/app/build/outputs/apk/debug/app-debug.apk#AutoPSB.apk" \
+            --target "$GITHUB_SHA" \
+            --title "AutoPSB APK (debug)" \
+            --notes "APK de depuração compilado automaticamente para instalação direta. Não contém chave de assinatura de produção." \
+            --latest=false
